@@ -107,12 +107,16 @@ private[http] final class UriParser(val input: ParserInput,
 
   // http://tools.ietf.org/html/rfc3986#appendix-A
 
-  def URI = rule { scheme ~ ':' ~ `hier-part` ~ optional('?' ~ rawQueryString) ~ optional('#' ~ fragment) }
+  def URI = rule { (( scheme ~ ':' ~ `hier-part` ) | `authority-path-abempty` ) ~ `query-fragment` }
+
+  def `query-fragment` = rule { optional('?' ~ rawQueryString) ~ optional('#' ~ fragment) }
 
   def origin = rule { scheme ~ ':' ~ '/' ~ '/' ~ hostAndPort }
 
+  def `authority-path-abempty` = rule { authority ~ `path-abempty` }
+
   def `hier-part` = rule(
-    '/' ~ '/' ~ authority ~ `path-abempty`
+    '/' ~ '/' ~ `authority-path-abempty`
     | `path-absolute`
     | `path-rootless`
     | `path-empty`)
@@ -133,6 +137,7 @@ private[http] final class UriParser(val input: ParserInput,
 
   def scheme = rule(
     'h' ~ 't' ~ 't' ~ 'p' ~ (&(':') ~ run(_scheme = "http") | 's' ~ &(':') ~ run(_scheme = "https"))
+    | &(hostAndPort) // allow for schema-less URI if first colon is the one separating host and port
     | clearSB() ~ ALPHA ~ appendLowered() ~ zeroOrMore(`scheme-char` ~ appendLowered()) ~ &(':') ~ run(_scheme = sb.toString))
 
   def `scheme-pushed` = rule { oneOrMore(`scheme-char` ~ appendLowered()) ~ run(_scheme = sb.toString) ~ push(_scheme)}

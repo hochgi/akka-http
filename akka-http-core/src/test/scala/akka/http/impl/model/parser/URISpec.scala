@@ -13,7 +13,7 @@ class URISpec extends FunSpec with Matchers {
     it("should allow a URI with no scheme and no port") {
       val uri = new UriParser("lightbend.com").parseUriReference()
       uri.scheme shouldBe empty
-      uri.path.head shouldEqual "lightbend.com"
+      uri.authority.host.address shouldEqual "lightbend.com"
       uri.effectivePort shouldEqual -1
     }
     it("should allow a URI with no scheme but with port") {
